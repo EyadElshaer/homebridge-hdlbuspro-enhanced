@@ -1,5 +1,6 @@
 import { PlatformAccessory } from 'homebridge'; // We import only what we need
 import { EventEmitter } from 'events';
+import { HDLBusproHomebridge } from './HDLPlatform';
 
 const HMBOpening = 1;
 const HMBClosing = 0;
@@ -7,7 +8,7 @@ const HMBStop = 2;
 
 export class RelayCurtains {
   private service: any;
-  
+
   private HDLOpening = 1;
   private HDLClosing = 2;
   private HDLStop = 0;
@@ -16,12 +17,12 @@ export class RelayCurtains {
   private stopper_process: NodeJS.Timeout | null = null;
 
   constructor(
-    private readonly platform: any,      // your platform class type if you have it
+    private readonly platform: HDLBusproHomebridge,
     private readonly accessory: PlatformAccessory,
     private readonly name: string,
     private readonly controller: any,
     private readonly device: any,
-    private readonly listener: any,
+    private readonly listener: RelayCurtainListener,
     private readonly channel: number,
     private readonly nc: boolean,
     private readonly duration: number,
