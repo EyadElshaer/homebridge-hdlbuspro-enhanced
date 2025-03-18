@@ -11,6 +11,8 @@ import { OccupancySensor } from './OccupancySensor';
 import { ContactSensor, DryListener } from './ContactSensor';
 import { RelayCurtains, RelayCurtainListener } from './RelayCurtains';
 import { RelayCurtainValve } from './RelayCurtainValve';
+import { RelayHeater } from './RelayHeater';
+import { RelayRGB } from './RelayRGB';  // ✅ Import RGB device class
 
 export interface DeviceType<T extends ABCDevice, U extends ABCListener> {
   deviceClass: new (...args: any[]) => T;
@@ -19,8 +21,7 @@ export interface DeviceType<T extends ABCDevice, U extends ABCListener> {
   idEnding: (config: Record<string, any>) => string;
 }
 
-
-export const deviceTypeMap: {[key: string]: DeviceType<any, any>} = {
+export const deviceTypeMap: { [key: string]: DeviceType<any, any> } = {
   'relaylightbulb': {
     deviceClass: RelayLightbulb,
     listener: RelayListener,
@@ -80,5 +81,17 @@ export const deviceTypeMap: {[key: string]: DeviceType<any, any>} = {
     listener: DryListener,
     uniqueArgs: (config) => [config.area, config.channel, config.nc],
     idEnding: (config) => `${config.area}.${config.channel}`,
+  },
+  'relayheater': {
+    deviceClass: RelayHeater,
+    listener: RelayListener,
+    uniqueArgs: (config) => [config.channel, config.minTemperature, config.maxTemperature, config.defaultTemperature],
+    idEnding: (config) => `${config.channel}`,
+  },
+  'relayrgb': {  // ✅ Fully Fixed RGB Support
+    deviceClass: RelayRGB,
+    listener: RelayListener,  // Change if a dedicated listener is needed
+    uniqueArgs: (config) => [config.red_channel, config.green_channel, config.blue_channel],
+    idEnding: (config) => `${config.red_channel}-${config.green_channel}-${config.blue_channel}`,
   },
 };

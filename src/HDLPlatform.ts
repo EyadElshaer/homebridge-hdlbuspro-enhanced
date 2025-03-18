@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 import SmartBus = require('smart-bus');
 import { Bus, Device } from 'smart-bus';
@@ -7,6 +6,8 @@ import { Bus, Device } from 'smart-bus';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { DeviceType, deviceTypeMap } from './DeviceList';
 import { ABCDevice, ABCListener } from './ABC';
+import { RelayHeater } from './RelayHeater';
+import { RelayRGB } from './RelayRGB';
 
 export class HDLBusproHomebridge implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
@@ -39,12 +40,14 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
         gateway: ip,
         port: port,
       });
+
       for (const subnet of bus.subnets) {
         const subnet_number: number = subnet.subnet_number;
         const cd_number: number = subnet.cd_number;
         const controllerObj: Device = busObj.controller(`${subnet_number}.${cd_number}`);
         const addressedDeviceMap = new Map();
         const uniqueIDPrefix = `${ip}:${port}.${subnet_number}`;
+
         for (const device of subnet.devices) {
           this.discoverDevice(busObj, subnet_number, device, uniqueIDPrefix, controllerObj, addressedDeviceMap);
         }
@@ -61,18 +64,71 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
   ) {
     const deviceAddress = `${subnet_number}.${device.device_address}`;
     const deviceType: string = (device.device_type === 'drycontact') ? device.drycontact_type : device.device_type;
-    const deviceTypeConfig: DeviceType<any, any> = deviceTypeMap[deviceType];
-    if (!deviceTypeConfig) {
-      this.log.error('Invalid device type:', deviceType);
+
+    this.log.info(`🔍 Discovering Device: ${device.device_name}, Type: ${deviceType}, Address: ${deviceAddress}`);
+    this.log.info('🔍 Raw Device Data:', JSON.stringify(device, null, 2));
+
+    if (deviceType === 'relayrgb') {
+      this.log.info(`🌈 Found RGB Light Device: ${device.device_name} at Address ${deviceAddress}`);
+
+      // ✅ Ensure Red, Green, and Blue Channels Are Assigned Correctly
+      const redChannel = device.red_channel;
+      const greenChannel = device.green_channel;
+      const blueChannel = device.blue_channel;
+
+      if (redChannel === undefined || greenChannel === undefined || blueChannel === undefined) {
+        this.log.error(`❌ RGB Channels Undefined for ${device.device_name} - Check Configuration`);
+        return;
+      }
+
+      this.log.info(`🌈 Assigned RGB Channels - Red: ${redChannel}, Green: ${greenChannel}, Blue: ${blueChannel}`);
+
+      const uuid: string = this.api.hap.uuid.generate(`${uniqueIDPrefix}.${device.device_address}`);
+      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+      if (existingAccessory) {
+        this.log.info(`✅ Restoring existing RGB accessory: ${device.device_name}`);
+        new RelayRGB(
+          this,
+          existingAccessory,
+          device.device_name,
+          controllerObj,
+          busObj.device(deviceAddress),
+          redChannel,
+          greenChannel,
+          blueChannel,
+        );
+      } else {
+        this.log.info(`🆕 Creating new RGB accessory: ${device.device_name}`);
+        const accessory = new this.api.platformAccessory(device.device_name, uuid);
+        accessory.context.device = device;
+
+        new RelayRGB(
+          this,
+          accessory,
+          device.device_name,
+          controllerObj,
+          busObj.device(deviceAddress),
+          redChannel,
+          greenChannel,
+          blueChannel,
+        );
+
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      }
       return;
     }
-    const { deviceClass, listener, uniqueArgs, idEnding } = deviceTypeConfig;
-    let uniqueIDSuffix = String(device.device_address);
-    if (idEnding(device)) {
-      uniqueIDSuffix = `${uniqueIDSuffix}.${idEnding(device)}`;
+
+    const deviceTypeConfig: DeviceType<any, any> = deviceTypeMap[deviceType];
+    if (!deviceTypeConfig) {
+      this.log.error(`❌ Invalid device type: ${deviceType}`);
+      return;
     }
-    const uniqueID = `${uniqueIDPrefix}.${uniqueIDSuffix}`;
+
+    const { deviceClass, listener, uniqueArgs } = deviceTypeConfig;
+    const uniqueID = `${uniqueIDPrefix}.${device.device_address}`;
     const uuid: string = this.api.hap.uuid.generate(uniqueID);
+
     let deviceObj: ABCDevice;
     let listenerObj: ABCListener;
     if (addressedDeviceMap.has(deviceAddress)) {
@@ -82,6 +138,7 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
       listenerObj = new listener(deviceObj, controllerObj);
       addressedDeviceMap.set(deviceAddress, { deviceObj, listenerObj });
     }
+
     const commonArgs = [device.device_name, controllerObj, deviceObj, listenerObj];
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
     buildDevice(this, existingAccessory, deviceClass, commonArgs, uniqueArgs(device), uuid);
@@ -103,5 +160,6 @@ function buildDevice(
     accessory = new platform.api.platformAccessory(commonArgs[0], uuid);
     platform.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
   }
+
   new deviceClass(platform, accessory, ...commonArgs, ...uniqueArgs);
 }
