@@ -2,24 +2,25 @@
   "private": false,
   "displayName": "HDL Buspro Enhanced",
   "name": "homebridge-hdlbusproenhanced",
-  "version": "1.1.37",
+  "version": "1.1.38",
   "description": "Linking the HDL bus into the Homebridge widget",
     "type": "git",
   "license": "Apache-2.0",
   "repository": {
-    "url": "git://github.com/EyadElshaer/homebridge-hdl-buspro.git"
+    "url": "git://github.com/EyadElshaer/homebridge-hdlbuspro-enhanced.git"
   },
   "bugs": {
-    "url": "https://github.com//EyadElshaer/homebridge-hdl-buspro/issues"
+    "url": "https://github.com//EyadElshaer/homebridge-hdlbuspro-enahnced/issues"
   },
   "engines": { 
-    "homebridge": "^1.6.0 || ^2.0.0-beta.0",
+    "homebridge": "^1.6.0 || ^2.0.0-beta.0", 
     "node": "^18.20.4 || ^20.15.1 || ^22"
   },
   "keywords": [
     "homebridge-plugin",
     "hdl",
-    "buspro"
+    "buspro",
+    "homebridge-hdl"
   ],
   "main": "dist/index.js",
   "scripts": {

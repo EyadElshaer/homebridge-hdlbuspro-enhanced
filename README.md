@@ -258,7 +258,7 @@ To be able to use the RelayRGB you need to have access to the 3 colors channels 
 ## Troubleshooting
 If you have any issues with the plugin then you can run homebridge in debug mode, which will provide some additional information. This might be useful for debugging issues.
 
-Please keep in mind that I could only test how plugin works on devices I have at home, and some devices were coded only based on documentation. So feel free to open issues [here](https://github.com//EyadElshaer/homebridge-hdl-buspro/issues) if you encounter problems/need your device supported!
+Please keep in mind that I could only test how plugin works on devices I have at home, and some devices were coded only based on documentation. So feel free to open issues [here](https://github.com//EyadElshaer/homebridge-hdlbuspro-enhanced/issues) if you encounter problems/need your device supported!
 
 Homebridge debug mode:
 ```sh
