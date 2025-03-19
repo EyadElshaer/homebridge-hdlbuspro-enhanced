@@ -14,6 +14,7 @@
 * Dry contact relays
 * Relay locks
 * Relay curtains (including custom valve usage)
+* Relay RGB
 
 Heaters and security systems may be supported in later versions.
 
@@ -23,13 +24,12 @@ If you are new to homebridge, please first read the homebridge [documentation](h
 If you are running on a Raspberry, you will find a tutorial in the [homebridge wiki](https://github.com/homebridge/homebridge/wiki/Install-Homebridge-on-Raspbian).
 
 Install homebridge:
-```sh
-sudo npm install -g homebridge
-```
 
-Install homebridge-hdl-buspro:
+[Homebridge Installation](https://homebridge.io/how-to-install-homebridge)
+
+Install homebridge-hdlbuspro-enhanced:
 ```sh
-sudo npm install -g homebridge-hdl-buspro
+sudo npm i homebridge-hdlbusproenhanced
 ```
 
 ## Configuration
@@ -40,10 +40,12 @@ This plugin cannot discover devices on its own, for this you should use software
 
 Typical HDL structure goes like this: **bus-subnet-device-channel**
 
-Example configuration:
+Example configurations:
+
+Relay Light Bulb:
 
 ```js
-        {
+  {
             "buses": [
                 "bus_name": "Main Bus",
                 "bus_IP": "10.0.0.1",
@@ -54,42 +56,141 @@ Example configuration:
                             "subnet_number": 1,
                             "cd_number": 55,
                             "devices": [
-                                {
-                                    "device_name": "Living room lights",
-                                    "device_address": 13,
-                                    "device_type": "relaylightbulb",
-                                    "channel": 4
-                                },
-                                {
-                                    "device_name": "Dining room sensor",
-                                    "device_address": 21,
-                                    "device_type": "sensor8in1"
-                                },
-                                {
-                                    "device_name": "Bathroom leak sensor",
-                                    "device_address": 69,
-                                    "device_type": "drycontact",
-                                    "area": 1,
-                                    "channel": 1,
-                                    "drycontact_type": "leaksensor",
-                                    "nc": false
-                                },
-                                {
-                                    "device_name": "Garden backdoor",
-                                    "device_address": 6,
-                                    "device_type": "relaylock",
-                                    "channel": 2,
-                                    "nc": true
-                                }
-                            ]
+                        {
+                            "device_name": "Bedroom Lights",
+                            "device_address": 5,
+                            "device_type": "relaylightbulb",
+                            "area": 1,
+                            "channel": 2,
                         }
                     ]
                 }
-            ],
-            "platform": "HDLBusproHomebridge"
-        },
+            ]
+        }
+    ]
+    "platform": "HDLBusproHomebridge"
+ }
 ```
 
+Relay Dimmamble Light Bulb:
+
+```js
+  {
+            "buses": [
+                "bus_name": "Main Bus",
+                "bus_IP": "10.0.0.1",
+                "bus_port": 6000
+                {
+                    "subnets": [
+                        {
+                            "subnet_number": 1,
+                            "cd_number": 55,
+                            "devices": [
+                        {
+                            "device_name": "Bedroom Lights",
+                            "device_address": 5,
+                            "device_type": "relaydimmablelightbulb",
+                            "area": 1,
+                            "channel": 2,
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    "platform": "HDLBusproHomebridge"
+  }
+```
+
+Sensor 8in1:
+
+```js
+  {
+            "buses": [
+                "bus_name": "Main Bus",
+                "bus_IP": "10.0.0.1",
+                "bus_port": 6000
+                {
+                    "subnets": [
+                        {
+                            "subnet_number": 1,
+                            "cd_number": 55,
+                            "devices": [
+                        {
+                            "device_name": "Dining room sensor",
+                            "device_address": 21,
+                            "device_type": "sensor8in1"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    "platform": "HDLBusproHomebridge"
+  }
+```
+
+Relay RGB:
+
+```js
+  {
+            "buses": [
+                "bus_name": "Main Bus",
+                "bus_IP": "10.0.0.1",
+                "bus_port": 6000
+                {
+                    "subnets": [
+                        {
+                            "subnet_number": 1,
+                            "cd_number": 55,
+                            "devices": [
+                        {
+                            "device_name": "Bedroom RGB Light",
+                            "device_address": 9,
+                            "device_type": "relayrgb",
+                            "red_channel": 1,
+                            "green_channel": 2,
+                            "blue_channel": 3
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    "platform": "HDLBusproHomebridge"
+  }
+```
+
+Relay Curtain:
+
+```js
+  {
+            "buses": [
+                "bus_name": "Main Bus",
+                "bus_IP": "10.0.0.1",
+                "bus_port": 6000
+                {
+                    "subnets": [
+                        {
+                            "subnet_number": 1,
+                            "cd_number": 55,
+                            "devices": [
+                        {
+                            "device_name": "Bedroom Curtain",
+                            "device_address": 17,
+                            "device_type": "relaycurtains",
+                            "channel": 1,
+                            "duration": 3.5,
+                            "curtains_precision": 10
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    "platform": "HDLBusproHomebridge"
+  }
+```
 ### Parameters
 #### Platform Configuration fields
 - `platform` [required]
@@ -127,6 +228,7 @@ Specify the type of device
     - *"drycontact"* - dry contact relay
     - *"relaycurtains"* - relay curtains (have to be calibrated in HDL)
     - *"relaycurtainvalve"* - custom usage of curtains relay to control a water valve
+    - *"relayrgb" - Control of your RGB light and exposed in HomeKit as RGB
 - `channel` [optional]
 Specify channel for a specific light group, curtains or dry contact of relay
 - `area` [optional]
@@ -148,13 +250,15 @@ HDL can only control partial curtain opening by timer, so you have to calibrate 
 Due to a lag between HDL and HB curtain timers there has to be some precision offset, or it might get bugged in "opening" status. Increase this value if you encounter it.
 - `valvetype` [required]
 You can choose 4 valve types: "General Valve", "Irrigation", "Shower Head", "Water Faucet".
+- `relayrgb_channels` [required]
+To be able to use the RelayRGB you need to have access to the 3 colors channels (Red Green Blue) channels to be added to the homebridge and be exposed in HomeKit as a RGB bulb 
 
 
 
 ## Troubleshooting
 If you have any issues with the plugin then you can run homebridge in debug mode, which will provide some additional information. This might be useful for debugging issues.
 
-Please keep in mind that I could only test how plugin works on devices I have at home, and some devices were coded only based on documentation. So feel free to open issues [here](https://github.com//markbegma/homebridge-hdl-buspro/issues) if you encounter problems/need your device supported!
+Please keep in mind that I could only test how plugin works on devices I have at home, and some devices were coded only based on documentation. So feel free to open issues [here](https://github.com//EyadElshaer/homebridge-hdl-buspro/issues) if you encounter problems/need your device supported!
 
 Homebridge debug mode:
 ```sh
@@ -163,4 +267,7 @@ homebridge -D
 
 
 ## Special thanks
+[markbegma](https://github.com/markbegma/homebridge-hdl-buspro.git) For the wonderful work making all of this possible
 [caligo-mentis](https://github.com/caligo-mentis/smart-bus) for his great work on Node.js remote control module for HDL Buspro.
+[nvuln](https://github.com/nVuln/homebridge-hdl-buspro.git) for his great work on fixing the Relay Curtain Bug
+

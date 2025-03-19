@@ -14,6 +14,7 @@
                     "properties": {
                         "bus_name": {
                             "title": "Bus name",
+                            "description": "The name of your bus.",
                             "type": "string",
                             "default": "New bus",
                             "minLength": 1,
@@ -21,13 +22,18 @@
                         },
                         "bus_IP": {
                             "title": "Bus IP address",
+                            "description": "The IP address of your bus.",
                             "type": "string",
                             "format": "ipv4",
                             "placeholder": "10.0.0.1",
-                            "required": true
+                            "required": true,
+                            "style": {
+                                "color": "#FFFFFF" 
+                            }
                         },
                         "bus_port": {
                             "title": "Bus port",
+                            "description": "The port of your bus.",
                             "type": "integer",
                             "default": 6000,
                             "required": true
@@ -72,14 +78,38 @@
                                                     "title": "Device type",
                                                     "type": "string",
                                                     "oneOf": [
-                                                        { "title": "Relay Lightbulb", "enum": ["relaylightbulb"] },
-                                                        { "title": "Relay Dimmable Lightbulb", "enum": ["relaydimmablelightbulb"] },
-                                                        { "title": "Relay Lock", "enum": ["relaylock"] },
-                                                        { "title": "Dry Contact", "enum": ["drycontact"] },
-                                                        { "title": "Sensor", "enum": ["sensor8in1"] },
-                                                        { "title": "Relay Curtains", "enum": ["relaycurtains"] },
-                                                        { "title": "Relay Curtain Valve", "enum": ["relaycurtainvalve"] },
-                                                        { "title": "Relay RGB", "enum": ["relayrgb"] }
+                                                        {
+                                                            "title": "Relay Lightbulb",
+                                                            "enum": ["relaylightbulb"]
+                                                        },
+                                                        {
+                                                            "title": "Relay Dimmable Lightbulb",
+                                                            "enum": ["relaydimmablelightbulb"]
+                                                        },
+                                                        {
+                                                            "title": "Relay Lock",
+                                                            "enum": ["relaylock"]
+                                                        },
+                                                        {
+                                                            "title": "Dry Contact",
+                                                            "enum": ["drycontact"]
+                                                        },
+                                                        {
+                                                            "title": "Sensor",
+                                                            "enum": ["sensor8in1"]
+                                                        },
+                                                        {
+                                                            "title": "Relay Curtains",
+                                                            "enum": ["relaycurtains"]
+                                                        },
+                                                        {
+                                                            "title": "Relay Curtain Valve",
+                                                            "enum": ["relaycurtainvalve"]
+                                                        },
+                                                        {
+                                                            "title": "Relay RGB",
+                                                            "enum": ["relayrgb"]
+                                                        }
                                                     ]
                                                 },
                                                 "area": {
@@ -87,62 +117,102 @@
                                                     "type": "number",
                                                     "minimum": 0,
                                                     "maximum": 254,
-                                                    "default": 1
+                                                    "default": 1,
+                                                    "description": "Change it in case your relay supports areas"
                                                 },
                                                 "channel": {
                                                     "title": "Device Channel",
                                                     "type": "number",
                                                     "minimum": 0,
-                                                    "maximum": 254,
-                                                    "condition": {
-                                                        "functionBody": "return (['relaylightbulb', 'relaydimmablelightbulb', 'relaylock', 'relaycurtains'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
-                                                    }
+                                                    "maximum": 254
                                                 },
                                                 "red_channel": {
                                                     "title": "Red Channel",
                                                     "type": "number",
                                                     "minimum": 0,
-                                                    "maximum": 254,
-                                                    "condition": {
-                                                        "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relayrgb';"
-                                                    }
+                                                    "maximum": 254
                                                 },
                                                 "green_channel": {
                                                     "title": "Green Channel",
                                                     "type": "number",
                                                     "minimum": 0,
-                                                    "maximum": 254,
-                                                    "condition": {
-                                                        "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relayrgb';"
-                                                    }
+                                                    "maximum": 254
                                                 },
                                                 "blue_channel": {
                                                     "title": "Blue Channel",
                                                     "type": "number",
                                                     "minimum": 0,
-                                                    "maximum": 254,
-                                                    "condition": {
-                                                        "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relayrgb';"
-                                                    }
+                                                    "maximum": 254
+                                                },
+                                                "lock_timeout": {
+                                                    "title": "Lock timeout",
+                                                    "type": "number",
+                                                    "minimum": 0
+                                                },
+                                                "nc": {
+                                                    "title": "Circuit type",
+                                                    "type": "boolean",
+                                                    "description": "Allows to flip logic for which state of contact is active",
+                                                    "default": true
                                                 },
                                                 "duration": {
                                                     "title": "Duration",
                                                     "type": "number",
-                                                    "description": "Time taken for curtain to fully open.",
-                                                    "minimum": 0,
-                                                    "condition": {
-                                                        "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relaycurtains';"
-                                                    }
+                                                    "description": "How long does it take for curtain to fully open. Should coincide with value from HDL.",
+                                                    "minimum": 0
                                                 },
                                                 "curtains_precision": {
                                                     "title": "Curtains position precision (%)",
                                                     "type": "number",
-                                                    "description": "Adjust if curtain status gets stuck as 'opening'.",
+                                                    "description": "Due to the fact HDL can only measure percentage of curtains open by timer and the fact that HDL relay and your HB server have a lag, precise condition in current/target levels may leave curtain status bugged as 'opening'. Increase this value if this happens.",
                                                     "minimum": 0,
-                                                    "default": 5,
-                                                    "condition": {
-                                                        "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relaycurtains';"
-                                                    }
+                                                    "default": 5
+                                                },
+                                                "drycontact_type": {
+                                                    "title": "Dry contact purpose",
+                                                    "type": "string",
+                                                    "description": "Select dry contact purpose",
+                                                    "oneOf": [
+                                                        {
+                                                            "title": "Leak Sensor",
+                                                            "enum": ["leaksensor"]
+                                                        },
+                                                        {
+                                                            "title": "Contact Sensor",
+                                                            "enum": ["contactsensor"]
+                                                        },
+                                                        {
+                                                            "title": "Smoke Sensor",
+                                                            "enum": ["smokesensor"]
+                                                        },
+                                                        {
+                                                            "title": "Occupancy Sensor",
+                                                            "enum": ["occupancysensor"]
+                                                        }
+                                                    ]
+                                                },
+                                                "valve_type": {
+                                                    "title": "Valve type",
+                                                    "type": "string",
+                                                    "description": "Select 1 of four valve types",
+                                                    "oneOf": [
+                                                        {
+                                                            "title": "General Valve",
+                                                            "enum": [0]
+                                                        },
+                                                        {
+                                                            "title": "Irrigation",
+                                                            "enum": [1]
+                                                        },
+                                                        {
+                                                            "title": "Shower Head",
+                                                            "enum": [2]
+                                                        },
+                                                        {
+                                                            "title": "Water Faucet",
+                                                            "enum": [3]
+                                                        }
+                                                    ]
                                                 }
                                             }
                                         }
@@ -159,72 +229,120 @@
         {
             "key": "buses",
             "type": "tabarray",
-            "title": "{{ value.bus_name || 'Bus' }}",
+            "title": "{{ value.bus_name || 'bus' }}",
             "items": [
                 "buses[].bus_name",
                 "buses[].bus_IP",
                 "buses[].bus_port",
                 {
-                    "key": "buses[].subnets",
-                    "title": "Subnets",
-                    "buttonText": "Add Bus Subnet",
+                    "key": "buses[]",
                     "type": "array",
-                    "expandable": true,
-                    "expanded": true,
+                    "title": "{{ value.title }}",
                     "items": [
-                        "buses[].subnets[].subnet_number",
-                        "buses[].subnets[].cd_number",
                         {
-                            "key": "buses[].subnets[].devices",
-                            "buttonText": "Add Device",
+                            "key": "buses[].subnets",
+                            "title": "Subnets",
+                            "buttonText": "Add Bus subnets",
                             "type": "array",
                             "expandable": true,
-                            "expanded": false,
+                            "expanded": true,
                             "items": [
-                                "buses[].subnets[].devices[].device_name",
-                                "buses[].subnets[].devices[].device_address",
-                                "buses[].subnets[].devices[].device_type",
+                                "buses[].subnets[].subnet_number",
+                                "buses[].subnets[].cd_number",
                                 {
-                                    "key": "buses[].subnets[].devices[].channel",
-                                    "condition": {
-                                        "functionBody": "return (['relaylightbulb', 'relaydimmablelightbulb', 'relaylock', 'relaycurtains'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
-                                    }
-                                },
-                                {
-                                    "key": "buses[].subnets[].devices[].duration",
-                                    "condition": {
-                                        "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relaycurtains';"
-                                    }
-                                },
-                                {
-                                    "key": "buses[].subnets[].devices[].curtains_precision",
-                                    "condition": {
-                                        "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relaycurtains';"
-                                    }
-                                },
-                                    {
-                                        "key": "buses[].subnets[].devices[].red_channel",
-                                        "condition": {
-                                            "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relayrgb';"
+                                    "key": "buses[].subnets[].devices",
+                                    "buttonText": "Add device",
+                                    "type": "array",
+                                    "expandable": true,
+                                    "expanded": false,
+                                    "items": [
+                                        "buses[].subnets[].devices[].device_name",
+                                        "buses[].subnets[].devices[].device_address",
+                                        "buses[].subnets[].devices[].device_type",
+                                        {
+                                            "key": "buses[].subnets[].devices[].area",
+                                            "condition": {
+                                                "functionBody": "return (['drycontact'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].channel",
+                                            "condition": {
+                                                "functionBody": "return (['relaylightbulb', 'relaydimmablelightbulb', 'drycontact', 'relaylock', 'relaycurtains'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].red_channel",
+                                            "condition": {
+                                                "functionBody": "return (['relayrgb'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].green_channel",
+                                            "condition": {
+                                                "functionBody": "return (['relayrgb'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].blue_channel",
+                                            "condition": {
+                                                "functionBody": "return (['relayrgb'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].drycontact_type",
+                                            "condition": {
+                                                "functionBody": "return (['drycontact'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].lock_timeout",
+                                            "condition": {
+                                                "functionBody": "return (['relaylock'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].duration",
+                                            "condition": {
+                                                "functionBody": "return (['relaycurtains'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].nc",
+                                            "type": "radios-inline",
+                                            "titleMap": [
+                                                {
+                                                    "name": "Normally closed",
+                                                    "value": true
+                                                },
+                                                {
+                                                    "name": "Normally open",
+                                                    "value": false
+                                                }
+                                            ],
+                                            "condition": {
+                                                "functionBody": "return (['relaylock', 'drycontact'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].valve_type",
+                                            "condition": {
+                                                "functionBody": "return (['relaycurtainvalve'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        },
+                                        {
+                                            "key": "buses[].subnets[].devices[].curtains_precision",
+                                            "condition": {
+                                                "functionBody": "return (['relaycurtains'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                            }
+                                        }
+                                    ]
                                 }
-                                },
-                                    {
-                                        "key": "buses[].subnets[].devices[].green_channel",
-                                        "condition": {
-                                            "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relayrgb';"
-                                        }
-                                },
-                                    {
-                                        "key": "buses[].subnets[].devices[].blue_channel",
-                                        "condition": {
-                                            "functionBody": "return model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type === 'relayrgb';"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            }
-        ]
-    }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
