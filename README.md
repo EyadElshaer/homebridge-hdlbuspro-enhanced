@@ -268,6 +268,8 @@ homebridge -D
 
 ## Special thanks
 [markbegma](https://github.com/markbegma/homebridge-hdl-buspro.git) For the wonderful work making all of this possible
+
 [caligo-mentis](https://github.com/caligo-mentis/smart-bus) for his great work on Node.js remote control module for HDL Buspro.
+
 [nvuln](https://github.com/nVuln/homebridge-hdl-buspro.git) for his great work on fixing the Relay Curtain Bug
 
