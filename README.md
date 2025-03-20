@@ -1,11 +1,11 @@
 <span align="center">
 
-# homebridge-hdl-buspro
+# homebridge-hdlbuspro-enhanced
 ## HomeKit integration for HDL Buspro relays
 
 </span>
 
-`homebridge-hdl-buspro` is a homebridge plugin to control your devices on the HDL Buspro buses from Home app on iOS. It currently supports the following types of devices:
+`homebridge-hdlbuspro-enhanced` is a homebridge plugin to control your devices on the HDL Buspro buses from Home app on iOS. It currently supports the following types of devices:
 
 ### Features
 * Relay Lightbulbs
