@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.46
+* [+] Fix Relay Curtain when putting the relay curtain into a certain precentage it blocks the hardware button
+* [+] Fix RGB flickering when trying to choose white color
+* [+] RGB remembers the last color you had to choose it when you turn it on the next time
+
 ## 1.1.26
 
 * [+] Added support for RGB
