@@ -1,7 +1,7 @@
 {
   "private": false,
   "displayName": "HDL Buspro Enhanced",
-  "name": "homebridge-hdlbusproenhanced",
+  "name": "@elshaer/homebridge-hdl-buspro-enhanced",
   "version": "1.2.1",
   "description": "Linking the HDL bus into the Homebridge widget",
     "type": "git",

@@ -29,7 +29,7 @@ Install homebridge:
 
 Install homebridge-hdlbuspro-enhanced:
 ```sh
-sudo npm i homebridge-hdlbusproenhanced
+sudo npm i @elshaer/homebridge-hdl-buspro-enhanced
 ```
 
 ## Configuration
