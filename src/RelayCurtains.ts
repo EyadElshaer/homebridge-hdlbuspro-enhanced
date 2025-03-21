@@ -24,7 +24,6 @@ export class RelayCurtains implements ABCDevice {
   private HDLClosing = 2;
   private HDLStop = 0;
 
-
   constructor(
     private readonly platform: HDLBusproHomebridge,
     private readonly accessory: PlatformAccessory,
@@ -56,6 +55,7 @@ export class RelayCurtains implements ABCDevice {
       this.HDLClosing = 1;
       this.HDLStop = 0;
     }
+
     const eventEmitter = this.listener.getCurtainEventEmitter(this.channel);
     eventEmitter.on('update', (status) => {
       clearInterval(this.postracker_process);
@@ -63,12 +63,14 @@ export class RelayCurtains implements ABCDevice {
         this.RelayCurtainsStates.CurrentPosition = this.RelayCurtainsStates.TargetPosition;
         this.service.getCharacteristic(Characteristic.CurrentPosition).updateValue(this.RelayCurtainsStates.CurrentPosition);
       }
+
       switch (status) {
         case this.HDLStop:
           this.RelayCurtainsStates.PositionState = HMBStop;
           this.service.getCharacteristic(Characteristic.PositionState).updateValue(this.RelayCurtainsStates.PositionState);
           this.platform.log.debug(this.name + ' reached stop at ' + this.RelayCurtainsStates.CurrentPosition);
           break;
+
         case this.HDLOpening:
           this.RelayCurtainsStates.PositionState = HMBOpening;
           this.service.getCharacteristic(Characteristic.PositionState).updateValue(this.RelayCurtainsStates.PositionState);
@@ -78,7 +80,12 @@ export class RelayCurtains implements ABCDevice {
               this.service.getCharacteristic(Characteristic.CurrentPosition).updateValue(this.RelayCurtainsStates.CurrentPosition);
             }
           }, 10 * this.duration);
-          if ((this.RelayCurtainsStates.TargetPosition < this.RelayCurtainsStates.CurrentPosition) || (this.RelayCurtainsStates.TargetPosition === 100) || (this.RelayCurtainsStates.TargetPosition === 0 && this.RelayCurtainsStates.CurrentPosition === 0)) {
+          if (
+            (this.RelayCurtainsStates.TargetPosition < this.RelayCurtainsStates.CurrentPosition) ||
+            (this.RelayCurtainsStates.TargetPosition === 100) ||
+            (this.RelayCurtainsStates.TargetPosition === 0 && this.RelayCurtainsStates.CurrentPosition === 0) ||
+            (this.RelayCurtainsStates.TargetPosition === this.RelayCurtainsStates.CurrentPosition)
+          ) {
             this.platform.log.debug('Starting full open of ' + this.name + ' (from ' + this.RelayCurtainsStates.CurrentPosition + ' to ' + this.RelayCurtainsStates.TargetPosition + ')');
             this.RelayCurtainsStates.TargetPosition = 100;
             this.service.getCharacteristic(Characteristic.TargetPosition).updateValue(this.RelayCurtainsStates.TargetPosition);
@@ -91,12 +98,13 @@ export class RelayCurtains implements ABCDevice {
                 target: this.device,
                 command: 0xE3E0,
                 data: { curtain: this.channel, status: this.HDLStop },
-              }, false); //not handling this error
+              }, false);
               this.service.getCharacteristic(Characteristic.CurrentPosition).updateValue(this.RelayCurtainsStates.CurrentPosition);
               this.platform.log.debug('Reached partial open position of ' + this.name + ' at ' + this.RelayCurtainsStates.TargetPosition);
             }, 1000 * (pathtogo / 100) * this.duration);
           }
           break;
+
         case this.HDLClosing:
           this.RelayCurtainsStates.PositionState = HMBClosing;
           this.service.getCharacteristic(Characteristic.PositionState).updateValue(this.RelayCurtainsStates.PositionState);
@@ -106,7 +114,12 @@ export class RelayCurtains implements ABCDevice {
               this.service.getCharacteristic(Characteristic.CurrentPosition).updateValue(this.RelayCurtainsStates.CurrentPosition);
             }
           }, 10 * this.duration);
-          if ((this.RelayCurtainsStates.TargetPosition > this.RelayCurtainsStates.CurrentPosition) || (this.RelayCurtainsStates.TargetPosition === 0) || (this.RelayCurtainsStates.TargetPosition === 100 && this.RelayCurtainsStates.CurrentPosition === 100)) {
+          if (
+            (this.RelayCurtainsStates.TargetPosition > this.RelayCurtainsStates.CurrentPosition) ||
+            (this.RelayCurtainsStates.TargetPosition === 0) ||
+            (this.RelayCurtainsStates.TargetPosition === 100 && this.RelayCurtainsStates.CurrentPosition === 100) ||
+            (this.RelayCurtainsStates.TargetPosition === this.RelayCurtainsStates.CurrentPosition)
+          ) {
             this.platform.log.debug('Starting full close of ' + this.name + ' (from ' + this.RelayCurtainsStates.CurrentPosition + ' to ' + this.RelayCurtainsStates.TargetPosition + ')');
             this.RelayCurtainsStates.TargetPosition = 0;
             this.service.getCharacteristic(Characteristic.TargetPosition).updateValue(this.RelayCurtainsStates.TargetPosition);
@@ -119,7 +132,7 @@ export class RelayCurtains implements ABCDevice {
                 target: this.device,
                 command: 0xE3E0,
                 data: { curtain: this.channel, status: this.HDLStop },
-              }, false); //not handling this error
+              }, false);
               this.service.getCharacteristic(Characteristic.CurrentPosition).updateValue(this.RelayCurtainsStates.CurrentPosition);
               this.platform.log.debug('Reached partial close position of ' + this.name + ' at ' + this.RelayCurtainsStates.TargetPosition);
             }, 1000 * (pathtogo / 100) * this.duration);
@@ -127,7 +140,7 @@ export class RelayCurtains implements ABCDevice {
           break;
       }
     });
-    // status request
+
     this.controller.send({
       target: this.device,
       command: 0xE3E2,
@@ -165,7 +178,6 @@ export class RelayCurtains implements ABCDevice {
       data: { curtain: this.channel, status: command },
     }, (err) => {
       if (err) {
-        // Revert to the old value
         this.RelayCurtainsStates.TargetPosition = oldValue;
         this.platform.log.error(`Error setting TargetPosition state for ${this.name}: ${err.message}`);
       } else {
@@ -195,7 +207,6 @@ export class RelayCurtainListener implements ABCListener {
     private readonly device: Device,
     private readonly controller: Device,
   ) {
-    // control response listener
     this.device.on(0xE3E1, (command) => {
       const data = command.data;
       const curtain = data.curtain;
@@ -203,7 +214,6 @@ export class RelayCurtainListener implements ABCListener {
       this.curtainsMap.set(curtain, status);
       this.eventEmitter.emit(`update_${curtain}`, status);
     });
-    // single status request response listener
     this.device.on(0xE3E3, (command) => {
       const data = command.data;
       const curtain = data.curtain;
@@ -211,17 +221,17 @@ export class RelayCurtainListener implements ABCListener {
       this.curtainsMap.set(curtain, status);
       this.eventEmitter.emit(`update_${curtain}`, status);
     });
-    // global status request response listener
     this.device.on(0xE3E4, (command) => {
       const data = command.data;
       for (const curtainInfo of data.curtains) {
-        this.curtainsMap.set(curtainInfo.number, curtainInfo.status);
-        this.eventEmitter.emit(`update_${curtainInfo.number}`, curtainInfo.status);
+        const curtain = curtainInfo.number;
+        const status = curtainInfo.status;
+        this.curtainsMap.set(curtain, status);
+        this.eventEmitter.emit(`update_${curtain}`, status);
       }
     });
   }
 
-  // This function returns an EventEmitter for the specified curtain
   getCurtainEventEmitter(curtain: number) {
     const eventEmitter = new EventEmitter();
     this.eventEmitter.on(`update_${curtain}`, (status) => {

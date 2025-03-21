@@ -21,6 +21,9 @@ export class RelayRGB implements ABCDevice {
 
   private listener: RelayListener;
   private lastLevels = { red: 0, green: 0, blue: 0 };
+  private ignoreExternalUpdates = false;
+  private updateTimeout: NodeJS.Timeout | null = null;
+  private isRestoringState = false;
 
   constructor(
     private readonly platform: HDLBusproHomebridge,
@@ -36,7 +39,7 @@ export class RelayRGB implements ABCDevice {
     const Characteristic = this.platform.Characteristic;
 
     this.service = this.accessory.getService(Service.Lightbulb) ||
-                   this.accessory.addService(Service.Lightbulb);
+      this.accessory.addService(Service.Lightbulb);
     this.service.setCharacteristic(Characteristic.Name, name);
 
     this.service.getCharacteristic(Characteristic.On)
@@ -68,12 +71,16 @@ export class RelayRGB implements ABCDevice {
     this.RGBState.On = value as boolean;
 
     if (this.RGBState.On && !wasOn) {
-      // Restore last color state when turning on
+      this.isRestoringState = true;
       this.RGBState.Hue = this.lastColorState.Hue;
       this.RGBState.Saturation = this.lastColorState.Saturation;
       this.RGBState.Brightness = this.lastColorState.Brightness;
+
+      // Immediate UI update
+      this.service.updateCharacteristic(this.platform.Characteristic.Hue, this.RGBState.Hue);
+      this.service.updateCharacteristic(this.platform.Characteristic.Saturation, this.RGBState.Saturation);
+      this.service.updateCharacteristic(this.platform.Characteristic.Brightness, this.RGBState.Brightness);
     } else if (!this.RGBState.On && wasOn) {
-      // Save color state when turning off
       this.lastColorState = {
         Hue: this.RGBState.Hue,
         Saturation: this.RGBState.Saturation,
@@ -81,7 +88,8 @@ export class RelayRGB implements ABCDevice {
       };
     }
 
-    this.updateRGBLights();
+    this.service.updateCharacteristic(this.platform.Characteristic.On, this.RGBState.On);
+    this.debouncedUpdate();
   }
 
   async getHue(): Promise<CharacteristicValue> {
@@ -91,7 +99,7 @@ export class RelayRGB implements ABCDevice {
   async setHue(value: CharacteristicValue): Promise<void> {
     this.RGBState.Hue = value as number;
     this.updateColorState();
-    this.updateRGBLights();
+    this.debouncedUpdate();
   }
 
   async getSaturation(): Promise<CharacteristicValue> {
@@ -101,7 +109,7 @@ export class RelayRGB implements ABCDevice {
   async setSaturation(value: CharacteristicValue): Promise<void> {
     this.RGBState.Saturation = value as number;
     this.updateColorState();
-    this.updateRGBLights();
+    this.debouncedUpdate();
   }
 
   async getBrightness(): Promise<CharacteristicValue> {
@@ -111,99 +119,114 @@ export class RelayRGB implements ABCDevice {
   async setBrightness(value: CharacteristicValue): Promise<void> {
     this.RGBState.Brightness = value as number;
     this.updateColorState();
-    this.updateRGBLights();
+    this.debouncedUpdate();
   }
 
   private updateColorState(): void {
-    if (this.RGBState.On) {
-      this.lastColorState = {
-        Hue: this.RGBState.Hue,
-        Saturation: this.RGBState.Saturation,
-        Brightness: this.RGBState.Brightness,
-      };
+    this.lastColorState = { ...this.RGBState };
+  }
+
+  private debouncedUpdate(): void {
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout);
     }
+    this.updateTimeout = setTimeout(() => this.updateRGBLights(), 50);
   }
 
   private updateRGBLights(): void {
     if (!this.RGBState.On) {
-      this.sendRelayCommand(this.redChannel, 0);
-      this.sendRelayCommand(this.greenChannel, 0);
-      this.sendRelayCommand(this.blueChannel, 0);
+      this.sendAtomicCommand([
+        { channel: this.redChannel, level: 0 },
+        { channel: this.greenChannel, level: 0 },
+        { channel: this.blueChannel, level: 0 },
+      ]);
       return;
     }
 
-    let { r, g, b } = this.hsvToRgb(this.RGBState.Hue, this.RGBState.Saturation, this.RGBState.Brightness);
+    const { r, g, b } = this.hsvToRgb(
+      this.RGBState.Hue,
+      this.RGBState.Saturation,
+      this.RGBState.Brightness,
+    );
 
-    // Preserve color even at low saturation
-    if (this.RGBState.Saturation < 10) {
-      const whiteLevel = this.RGBState.Brightness;
-      r = whiteLevel;
-      g = whiteLevel;
-      b = whiteLevel;
-    }
+    this.sendAtomicCommand([
+      { channel: this.redChannel, level: r },
+      { channel: this.greenChannel, level: g },
+      { channel: this.blueChannel, level: b },
+    ]);
 
-    this.sendRelayCommand(this.redChannel, r);
-    this.sendRelayCommand(this.greenChannel, g);
-    this.sendRelayCommand(this.blueChannel, b);
+    this.isRestoringState = false;
   }
 
-  private sendRelayCommand(channel: number, level: number): void {
-    if (channel === undefined) {
-      return;
-    }
+  private sendAtomicCommand(commands: Array<{channel: number; level: number}>): void {
+    this.ignoreExternalUpdates = true;
 
-    this.controller.send({
-      target: this.device,
-      command: 0x0031,
-      data: { channel, level },
-    }, (err) => {
-      if (err) {
-        this.platform.log.error(`Error setting channel ${channel} for ${this.name}: ${err.message}`);
+    commands.forEach(cmd => {
+      if (cmd.channel === undefined) {
+        return;
       }
+      this.controller.send({
+        target: this.device,
+        command: 0x0031,
+        data: { channel: cmd.channel, level: cmd.level },
+      });
     });
+
+    setTimeout(() => {
+      this.ignoreExternalUpdates = false;
+    }, 300); // Increased timeout for hardware response
   }
 
   private hsvToRgb(h: number, s: number, v: number) {
-    s /= 100;
-    v /= 100;
-    const c = v * s;
-    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
-    const m = v - c;
-    let r = 0, g = 0, b = 0;
+    h = Math.max(0, Math.min(360, h));
+    s = Math.max(0, Math.min(100, s)) / 100;
+    v = Math.max(0, Math.min(100, v)) / 100;
 
-    if (h < 60) {
-      r = c; g = x;
-    } else if (h < 120) {
-      r = x; g = c;
-    } else if (h < 180) {
-      g = c; b = x;
-    } else if (h < 240) {
-      g = x; b = c;
-    } else if (h < 300) {
-      r = x; b = c;
-    } else {
-      r = c; b = x;
+    if (s < 0.05) {
+      const whiteLevel = Math.round(v * 100);
+      return { r: whiteLevel, g: whiteLevel, b: whiteLevel };
+    }
+
+    const i = Math.floor(h / 60);
+    const f = (h / 60) - i;
+    const p = v * (1 - s);
+    const q = v * (1 - s * f);
+    const t = v * (1 - s * (1 - f));
+
+    let r, g, b;
+    switch (i % 6) {
+      case 0: r = v; g = t; b = p; break;
+      case 1: r = q; g = v; b = p; break;
+      case 2: r = p; g = v; b = t; break;
+      case 3: r = p; g = q; b = v; break;
+      case 4: r = t; g = p; b = v; break;
+      case 5: r = v; g = p; b = q; break;
+      default: r = 0; g = 0; b = 0;
     }
 
     return {
-      r: Math.round((r + m) * 100),
-      g: Math.round((g + m) * 100),
-      b: Math.round((b + m) * 100),
+      r: Math.round(r * 100),
+      g: Math.round(g * 100),
+      b: Math.round(b * 100),
     };
   }
 
   private listenForExternalUpdates(): void {
-    const createUpdateHandler = (color: 'red' | 'green' | 'blue') => (level: number) => {
+    const createHandler = (color: 'red' | 'green' | 'blue') => (level: number) => {
       this.lastLevels[color] = level;
       this.handleExternalUpdate();
     };
 
-    this.listener.getChannelEventEmitter(this.redChannel).on('update', createUpdateHandler('red'));
-    this.listener.getChannelEventEmitter(this.greenChannel).on('update', createUpdateHandler('green'));
-    this.listener.getChannelEventEmitter(this.blueChannel).on('update', createUpdateHandler('blue'));
+    this.listener.getChannelEventEmitter(this.redChannel).on('update', createHandler('red'));
+    this.listener.getChannelEventEmitter(this.greenChannel).on('update', createHandler('green'));
+    this.listener.getChannelEventEmitter(this.blueChannel).on('update', createHandler('blue'));
   }
 
   private handleExternalUpdate(): void {
+    if (this.ignoreExternalUpdates || this.isRestoringState) {
+      return;
+    }
+
     const { h, s, v } = this.rgbToHsv(
       this.lastLevels.red,
       this.lastLevels.green,
@@ -232,6 +255,7 @@ export class RelayRGB implements ABCDevice {
     r /= 100;
     g /= 100;
     b /= 100;
+
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     const delta = max - min;
@@ -254,6 +278,10 @@ export class RelayRGB implements ABCDevice {
     const s = max === 0 ? 0 : (delta / max) * 100;
     const v = max * 100;
 
-    return { h, s, v };
+    return {
+      h: Math.round(h),
+      s: Math.round(s),
+      v: Math.round(v),
+    };
   }
 }
