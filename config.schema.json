@@ -5,10 +5,15 @@
     "schema": {
         "type": "object",
         "properties": {
+            "name": {
+                "title": "Name",
+                "type": "string",
+                "description": "The name for this HDL Buspro platform instance (appears in Homebridge).",
+                "required": true
+            },
             "buses": {
                 "title": "Buses",
                 "type": "array",
-                "required": true,
                 "items": {
                     "type": "object",
                     "properties": {
@@ -223,9 +228,15 @@
                     }
                 }
             }
-        }
+        },
+        "required": ["name", "buses"]
     },
     "layout": [
+        {
+            "key": "name",
+            "type": "string",
+            "placeholder": "My HDL Buspro System"
+        },
         {
             "key": "buses",
             "type": "tabarray",
