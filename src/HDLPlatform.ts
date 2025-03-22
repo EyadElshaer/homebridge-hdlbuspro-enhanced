@@ -55,9 +55,10 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
     }
   }
 
-  discoverDevice(busObj: Bus,
+  discoverDevice(
+    busObj: Bus,
     subnet_number: number,
-    device,
+    device: any,
     uniqueIDPrefix: string,
     controllerObj: Device,
     addressedDeviceMap: Map<any, any>,
@@ -68,54 +69,9 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
     this.log.info(`🔍 Discovering Device: ${device.device_name}, Type: ${deviceType}, Address: ${deviceAddress}`);
     this.log.info('🔍 Raw Device Data:', JSON.stringify(device, null, 2));
 
+    // Handle RGB devices separately
     if (deviceType === 'relayrgb') {
-      this.log.info(`🌈 Found RGB Light Device: ${device.device_name} at Address ${deviceAddress}`);
-
-      // ✅ Ensure Red, Green, and Blue Channels Are Assigned Correctly
-      const redChannel = device.red_channel;
-      const greenChannel = device.green_channel;
-      const blueChannel = device.blue_channel;
-
-      if (redChannel === undefined || greenChannel === undefined || blueChannel === undefined) {
-        this.log.error(`❌ RGB Channels Undefined for ${device.device_name} - Check Configuration`);
-        return;
-      }
-
-      this.log.info(`🌈 Assigned RGB Channels - Red: ${redChannel}, Green: ${greenChannel}, Blue: ${blueChannel}`);
-
-      const uuid: string = this.api.hap.uuid.generate(`${uniqueIDPrefix}.${device.device_address}`);
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-
-      if (existingAccessory) {
-        this.log.info(`✅ Restoring existing RGB accessory: ${device.device_name}`);
-        new RelayRGB(
-          this,
-          existingAccessory,
-          device.device_name,
-          controllerObj,
-          busObj.device(deviceAddress),
-          redChannel,
-          greenChannel,
-          blueChannel,
-        );
-      } else {
-        this.log.info(`🆕 Creating new RGB accessory: ${device.device_name}`);
-        const accessory = new this.api.platformAccessory(device.device_name, uuid);
-        accessory.context.device = device;
-
-        new RelayRGB(
-          this,
-          accessory,
-          device.device_name,
-          controllerObj,
-          busObj.device(deviceAddress),
-          redChannel,
-          greenChannel,
-          blueChannel,
-        );
-
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      }
+      this.handleRGBDevice(device, deviceAddress, uniqueIDPrefix, busObj, controllerObj);
       return;
     }
 
@@ -125,12 +81,13 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
       return;
     }
 
-    const { deviceClass, listener, uniqueArgs } = deviceTypeConfig;
-    const uniqueID = `${uniqueIDPrefix}.${device.device_address}`;
+    const { deviceClass, listener, uniqueArgs, idEnding } = deviceTypeConfig;
+    const uniqueID = `${uniqueIDPrefix}.${device.device_address}.${idEnding(device)}`;
     const uuid: string = this.api.hap.uuid.generate(uniqueID);
 
     let deviceObj: ABCDevice;
     let listenerObj: ABCListener;
+
     if (addressedDeviceMap.has(deviceAddress)) {
       ({ deviceObj, listenerObj } = addressedDeviceMap.get(deviceAddress));
     } else {
@@ -141,25 +98,82 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
 
     const commonArgs = [device.device_name, controllerObj, deviceObj, listenerObj];
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
-    buildDevice(this, existingAccessory, deviceClass, commonArgs, uniqueArgs(device), uuid);
-  }
-}
-
-function buildDevice(
-  platform: HDLBusproHomebridge,
-  accessory: PlatformAccessory | undefined,
-  deviceClass: new (...args: any[]) => ABCDevice,
-  commonArgs: any[],
-  uniqueArgs: any[],
-  uuid: string,
-) {
-  if (accessory) {
-    platform.log.info('Restoring existing accessory from cache:', accessory.displayName);
-  } else {
-    platform.log.info('Adding new accessory:', commonArgs[0]);
-    accessory = new platform.api.platformAccessory(commonArgs[0], uuid);
-    platform.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    this.buildDevice(existingAccessory, deviceClass, commonArgs, uniqueArgs(device), uuid);
   }
 
-  new deviceClass(platform, accessory, ...commonArgs, ...uniqueArgs);
+  private handleRGBDevice(
+    device: any,
+    deviceAddress: string,
+    uniqueIDPrefix: string,
+    busObj: Bus,
+    controllerObj: Device,
+  ) {
+    this.log.info(`🌈 Found RGB Light Device: ${device.device_name} at Address ${deviceAddress}`);
+
+    const redChannel = device.red_channel;
+    const greenChannel = device.green_channel;
+    const blueChannel = device.blue_channel;
+
+    if (redChannel === undefined || greenChannel === undefined || blueChannel === undefined) {
+      this.log.error(`❌ RGB Channels Undefined for ${device.device_name} - Check Configuration`);
+      return;
+    }
+
+    this.log.info(`🌈 Assigned RGB Channels - Red: ${redChannel}, Green: ${greenChannel}, Blue: ${blueChannel}`);
+
+    const uuid: string = this.api.hap.uuid.generate(
+      `${uniqueIDPrefix}.${device.device_address}.rgb.${redChannel}-${greenChannel}-${blueChannel}`,
+    );
+
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+    if (existingAccessory) {
+      this.log.info(`✅ Restoring existing RGB accessory: ${device.device_name}`);
+      new RelayRGB(
+        this,
+        existingAccessory,
+        device.device_name,
+        controllerObj,
+        busObj.device(deviceAddress),
+        redChannel,
+        greenChannel,
+        blueChannel,
+      );
+    } else {
+      this.log.info(`🆕 Creating new RGB accessory: ${device.device_name}`);
+      const accessory = new this.api.platformAccessory(device.device_name, uuid);
+      accessory.context.device = device;
+
+      new RelayRGB(
+        this,
+        accessory,
+        device.device_name,
+        controllerObj,
+        busObj.device(deviceAddress),
+        redChannel,
+        greenChannel,
+        blueChannel,
+      );
+
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    }
+  }
+
+  private buildDevice(
+    accessory: PlatformAccessory | undefined,
+    deviceClass: new (...args: any[]) => ABCDevice,
+    commonArgs: any[],
+    uniqueArgs: any[],
+    uuid: string,
+  ) {
+    if (accessory) {
+      this.log.info('Restoring existing accessory from cache:', accessory.displayName);
+    } else {
+      this.log.info('Adding new accessory:', commonArgs[0]);
+      accessory = new this.api.platformAccessory(commonArgs[0], uuid);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    }
+
+    new deviceClass(this, accessory, ...commonArgs, ...uniqueArgs);
+  }
 }
