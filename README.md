@@ -15,6 +15,7 @@
 * Relay locks
 * Relay curtains (including custom valve usage)
 * Relay RGB
+* Relay Fan
 
 Heaters and security systems may be supported in later versions.
 
@@ -176,6 +177,37 @@ Relay Curtain:
                             "cd_number": 55,
                             "devices": [
                         {
+                            "device_name": "Bedroom Fan",
+                            "device_address": 5,
+                            "device_type": "relayfan",
+                            "area": 1,
+                            "channel": 1,
+                            "nc": true,
+                            "curtains_precision": 5
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+    "platform": "HDLBusproHomebridge"
+  }
+```
+Relay Fan:
+
+```js
+  {
+            "buses": [
+                "bus_name": "Main Bus",
+                "bus_IP": "10.0.0.1",
+                "bus_port": 6000
+                {
+                    "subnets": [
+                        {
+                            "subnet_number": 1,
+                            "cd_number": 55,
+                            "devices": [
+                        {
                             "device_name": "Bedroom Curtain",
                             "device_address": 17,
                             "device_type": "relaycurtains",
@@ -191,6 +223,7 @@ Relay Curtain:
     "platform": "HDLBusproHomebridge"
   }
 ```
+
 ### Parameters
 #### Platform Configuration fields
 - `platform` [required]
@@ -229,6 +262,7 @@ Specify the type of device
     - *"relaycurtains"* - relay curtains (have to be calibrated in HDL)
     - *"relaycurtainvalve"* - custom usage of curtains relay to control a water valve
     - *"relayrgb" - Control of your RGB light and exposed in HomeKit as RGB
+    - *"relayfan" - Controls fans connected to HDL
 - `channel` [optional]
 Specify channel for a specific light group, curtains or dry contact of relay
 - `area` [optional]
@@ -269,7 +303,8 @@ homebridge -D
 ## Special thanks
 [markbegma](https://github.com/markbegma/homebridge-hdl-buspro.git) For the wonderful work making all of this possible
 
-[caligo-mentis](https://github.com/caligo-mentis/smart-bus) for his great work on Node.js remote control module for HDL Buspro.
+[caligo-mentis](https://github.com/caligo-mentis/smart-bus) For his great work on Node.js remote control module for HDL Buspro.
 
-[nvuln](https://github.com/nVuln/homebridge-hdl-buspro.git) for his great work on fixing the Relay Curtain Bug
+[nvuln](https://github.com/nVuln/homebridge-hdl-buspro.git) For the great work on fixing the Relay Curtain Bug
 
+[jainvandit99](https://github.com/jainvandit99) For his wonderful work with adding Relay Fan support

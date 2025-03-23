@@ -33,6 +33,11 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
   }
 
   discoverDevices() {
+    if (!Array.isArray(this.config.buses)) {
+      this.log.error(`Plugin configuration error: "buses" must be a valid array in your config.json. Current value: ${JSON.stringify(this.config.buses)}`);
+      return;
+    }
+
     for (const bus of this.config.buses) {
       const ip: string = bus.bus_IP;
       const port: number = bus.bus_port;
@@ -69,7 +74,6 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
     this.log.info(`🔍 Discovering Device: ${device.device_name}, Type: ${deviceType}, Address: ${deviceAddress}`);
     this.log.info('🔍 Raw Device Data:', JSON.stringify(device, null, 2));
 
-    // Handle RGB devices separately
     if (deviceType === 'relayrgb') {
       this.handleRGBDevice(device, deviceAddress, uniqueIDPrefix, busObj, controllerObj);
       return;
@@ -77,7 +81,7 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
 
     const deviceTypeConfig: DeviceType<any, any> = deviceTypeMap[deviceType];
     if (!deviceTypeConfig) {
-      this.log.error(`❌ Invalid device type: ${deviceType}`);
+      this.log.error(`Invalid device type: ${deviceType}`);
       return;
     }
 
@@ -108,18 +112,18 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
     busObj: Bus,
     controllerObj: Device,
   ) {
-    this.log.info(`🌈 Found RGB Light Device: ${device.device_name} at Address ${deviceAddress}`);
+    this.log.info(`Found RGB Light Device: ${device.device_name} at Address ${deviceAddress}`);
 
     const redChannel = device.red_channel;
     const greenChannel = device.green_channel;
     const blueChannel = device.blue_channel;
 
     if (redChannel === undefined || greenChannel === undefined || blueChannel === undefined) {
-      this.log.error(`❌ RGB Channels Undefined for ${device.device_name} - Check Configuration`);
+      this.log.error(`RGB Channels Undefined for ${device.device_name} - Check Configuration`);
       return;
     }
 
-    this.log.info(`🌈 Assigned RGB Channels - Red: ${redChannel}, Green: ${greenChannel}, Blue: ${blueChannel}`);
+    this.log.info(`Assigned RGB Channels - Red: ${redChannel}, Green: ${greenChannel}, Blue: ${blueChannel}`);
 
     const uuid: string = this.api.hap.uuid.generate(
       `${uniqueIDPrefix}.${device.device_address}.rgb.${redChannel}-${greenChannel}-${blueChannel}`,
@@ -128,7 +132,7 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
     if (existingAccessory) {
-      this.log.info(`✅ Restoring existing RGB accessory: ${device.device_name}`);
+      this.log.info(`Restoring existing RGB accessory: ${device.device_name}`);
       new RelayRGB(
         this,
         existingAccessory,
@@ -140,7 +144,7 @@ export class HDLBusproHomebridge implements DynamicPlatformPlugin {
         blueChannel,
       );
     } else {
-      this.log.info(`🆕 Creating new RGB accessory: ${device.device_name}`);
+      this.log.info(`Creating new RGB accessory: ${device.device_name}`);
       const accessory = new this.api.platformAccessory(device.device_name, uuid);
       accessory.context.device = device;
 

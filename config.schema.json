@@ -115,6 +115,10 @@
                                                         {
                                                             "title": "Relay RGB",
                                                             "enum": ["relayrgb"]
+                                                        },
+                                                        {
+                                                            "title": "Relay Fan",
+                                                            "enum": ["relayfan"]
                                                         }
                                                     ]
                                                 },
@@ -280,7 +284,7 @@
                                         {
                                             "key": "buses[].subnets[].devices[].channel",
                                             "condition": {
-                                                "functionBody": "return (['relaylightbulb', 'relaydimmablelightbulb', 'drycontact', 'relaylock', 'relaycurtains'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
+                                                "functionBody": "return (['relaylightbulb', 'relaydimmablelightbulb', 'drycontact', 'relaylock', 'relaycurtains', 'relayfan'].includes(model.buses[arrayIndices[0]].subnets[arrayIndices[1]].devices[arrayIndices[2]].device_type))"
                                             }
                                         },
                                         {
