@@ -162,7 +162,7 @@ Relay RGB:
   }
 ```
 
-Relay Curtain:
+Relay Fan:
 
 ```js
   {
@@ -193,7 +193,7 @@ Relay Curtain:
     "platform": "HDLBusproHomebridge"
   }
 ```
-Relay Fan:
+Relay Curtain:
 
 ```js
   {
