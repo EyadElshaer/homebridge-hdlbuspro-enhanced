@@ -7,6 +7,8 @@
 
 `Homebridge-hdlbuspro-enhanced` is a homebridge plugin to control your devices on the HDL Buspro buses from Home app on iOS. It currently supports the following types of devices:
 
+[![verified-by-homebridge](https://img.shields.io/badge/homebridge-verified-blueviolet?color=%23491F59&style=for-the-badge&logoColor=%23FFFFFF&logo=homebridge)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
+
 ### Features
 * Relay Lightbulbs
 * Relay Dimmable Lightbulbs
