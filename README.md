@@ -12,10 +12,10 @@
 ### Features
 * Relay Lightbulbs
 * Relay Dimmable Lightbulbs
-* Sensors 8 in 1 (dry contacts not supported yet)
-* Dry contact relays
-* Relay locks
-* Relay curtains (including custom valve usage)
+* Sensors 8 in 1
+* Dry Contact Relays
+* Relay Locks
+* Relay Curtains (including custom valve usage)
 * Relay RGB
 * Relay Fan
 
