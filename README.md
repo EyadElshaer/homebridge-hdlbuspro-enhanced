@@ -226,7 +226,8 @@ Relay Curtain:
 ### Parameters
 #### Platform Configuration fields
 - `platform` [required]
-Should always be **"HDLBusproHomebridge"**. - `buses` [required] A list of your buses
+Should always be **"HDLBusproHomebridge"**.
+- `buses` [required] A list of your buses
 #### Bus configuration fields
 - `bus_name` [required]
 Name of your bus.
