@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.10
+* [NEW] Verified By Homebridge!
+
 ## 1.2.9
 * [NEW] Added Support For RelayFan. Thanks to @jainvandit99 & @markbegma
 * [BUG-FIX] When trying to add HDLBusProEnhanced with no buses it keeps on boot looping
