@@ -11,7 +11,7 @@
 
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/Verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 [![npm](https://img.shields.io/npm/v/@elshaer/homebridge-hdl-buspro-enhanced/latest?label=latest)](https://www.npmjs.com/package/@elshaer/homebridge-hdl-buspro-enhanced)
-[![join-discord](https://badgen.net/badge/icon/discord?icon=discord&label=hdl-buspro)](https://discord.gg/homebridge-432663330281226270)
+[![join-discord](https://badgen.net/badge/icon/discord?icon=discord&label=hdl-buspro)](https://discord.com/channels/432663330281226270/1353999499202396171)
 
 ### Features
 * Relay Lightbulbs
