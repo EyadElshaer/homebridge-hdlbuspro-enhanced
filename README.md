@@ -1,13 +1,17 @@
 <span align="center">
 
+![images](https://github.com/user-attachments/assets/328679d7-ea0d-4aac-a1b7-948659d8a023)
+  
 # Homebridge HDL Buspro Enhanced
-## HomeKit integration for HDL Buspro relays
+## HomeKit integration for HDL Buspro relays 
 
 </span>
 
-`Homebridge-hdlbuspro-enhanced` is a homebridge plugin to control your devices on the HDL Buspro buses from Home app on iOS. It currently supports the following types of devices:
+`homebridge-hdlbuspro-enhanced` is a homebridge plugin to control your devices on the HDL Buspro buses from Home app on iOS. It currently supports the following types of devices:
 
-[![verified-by-homebridge](https://img.shields.io/badge/homebridge-verified-blueviolet?color=%23491F59&style=for-the-badge&logoColor=%23FFFFFF&logo=homebridge)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/Verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
+[![npm](https://img.shields.io/npm/v/@elshaer/homebridge-hdl-buspro-enhanced/latest?label=latest)](https://www.npmjs.com/package/@elshaer/homebridge-hdl-buspro-enhanced)
+[![join-discord](https://badgen.net/badge/icon/discord?icon=discord&label=hdl-buspro)](https://discord.gg/homebridge-432663330281226270)
 
 ### Features
 * Relay Lightbulbs
@@ -45,7 +49,7 @@ Typical HDL structure goes like this: **bus-subnet-device-channel**
 
 Example configurations:
 
-Relay Light Bulb:
+## Relay Light Bulb:
 
 ```js
   {
@@ -75,7 +79,7 @@ Relay Light Bulb:
  }
 ```
 
-Relay Dimmamble Light Bulb:
+## Relay Dimmamble Light Bulb:
 
 ```js
   {
@@ -105,7 +109,7 @@ Relay Dimmamble Light Bulb:
   }
 ```
 
-Sensor 8in1:
+## Sensor 8in1:
 
 ```js
   {
@@ -133,7 +137,7 @@ Sensor 8in1:
   }
 ```
 
-Relay RGB:
+## Relay RGB:
 
 ```js
   {
@@ -164,7 +168,7 @@ Relay RGB:
   }
 ```
 
-Relay Fan:
+## Relay Fan:
 
 ```js
   {
@@ -192,7 +196,7 @@ Relay Fan:
     "platform": "HDLBusproHomebridge"
   }
 ```
-Relay Curtain:
+## Relay Curtain:
 
 ```js
   {
