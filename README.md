@@ -3,7 +3,7 @@
 ![images](https://github.com/user-attachments/assets/328679d7-ea0d-4aac-a1b7-948659d8a023)
   
 # Homebridge HDL Buspro Enhanced
-## HomeKit integration for HDL Buspro relays 
+## Control your HDL System with HomeKit
 
 </span>
 
